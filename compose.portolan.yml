@@ -1,0 +1,67 @@
+---
+x-portolan-libs: &portolan-libs
+  depends_on:
+    portolan-libs-init:
+      condition: service_completed_successfully
+  volumes:
+    - portolan_additional_libs:/opt/additional_libs:ro
+
+services:
+  osm-viewer:
+    image: nginx:1.29.3-alpine
+    depends_on:
+      gateway:
+        condition: service_started
+    ports:
+      - "9080:80"
+    volumes:
+      - ./viewer:/usr/share/nginx/html:ro
+      - ./viewer/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  portolan-libs-init:
+    image: alpine:3.24.0
+    user: root
+    environment:
+      TILEVERSE_PROVIDER_VERSION: ${TILEVERSE_PROVIDER_VERSION:-2.1.0}
+    volumes:
+      - ${PORTOLAN_CLOUD_ZIP:?Ejecute make download primero}:/bundle/portolan.zip:ro
+      - portolan_additional_libs:/opt/additional_libs
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        apk add --no-cache curl unzip
+        find /opt/additional_libs -maxdepth 1 -type f \
+          \( \
+            -name 'geoserver-portolan-*.jar' -o \
+            -name 'portolan-java-*.jar' -o \
+            -name 'tileverse-storage-s3-*.jar' -o \
+            -name 'tileverse-storage-gcs-*.jar' \
+          \) \
+          -delete
+        unzip -jo /bundle/portolan.zip '*.jar' -d /opt/additional_libs
+        for artifact in tileverse-storage-gcs tileverse-storage-s3; do
+          curl --fail --location --retry 3 --show-error \
+            "https://repo1.maven.org/maven2/io/tileverse/storage/$${artifact}/$${TILEVERSE_PROVIDER_VERSION}/$${artifact}-$${TILEVERSE_PROVIDER_VERSION}.jar" \
+            --output "/opt/additional_libs/$${artifact}-$${TILEVERSE_PROVIDER_VERSION}.jar"
+        done
+        chmod 0444 /opt/additional_libs/*.jar
+    restart: "no"
+
+  webui:
+    <<: *portolan-libs
+  wms:
+    <<: *portolan-libs
+  wfs:
+    <<: *portolan-libs
+  wcs:
+    <<: *portolan-libs
+  wps:
+    <<: *portolan-libs
+  restconfig:
+    <<: *portolan-libs
+  gwc:
+    <<: *portolan-libs
+
+volumes:
+  portolan_additional_libs:

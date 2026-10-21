@@ -1,0 +1,20 @@
+:root { color: #172126; font-family: system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { display: grid; grid-template-columns: minmax(270px, 340px) 1fr; height: 100vh; margin: 0; }
+.panel { overflow: auto; padding: 1rem; border-right: 1px solid #ccd5d8; background: #f7f9fa; }
+h1 { margin-top: 0; font-size: 1.35rem; }
+form { display: grid; gap: 0.75rem; }
+fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+label { display: grid; gap: 0.25rem; font-size: 0.9rem; }
+input, select, textarea, button { width: 100%; padding: 0.55rem; font: inherit; }
+button { border: 1px solid #075985; border-radius: 3px; color: white; background: #0369a1; cursor: pointer; }
+button.secondary { color: #075985; background: white; }
+button:disabled { opacity: 0.55; cursor: wait; }
+.status { display: block; min-height: 3rem; margin-top: 1rem; padding: 0.75rem; background: white; border-left: 4px solid #0284c7; }
+.status.error { border-color: #dc2626; color: #991b1b; }
+details { margin-top: 1rem; overflow-wrap: anywhere; font-size: 0.8rem; }
+#map { min-width: 0; height: 100vh; background: #e8eef0; }
+@media (max-width: 700px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto 60vh; height: auto; }
+  #map { height: 60vh; }
+}

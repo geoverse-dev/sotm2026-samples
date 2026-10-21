@@ -1,0 +1,5 @@
+/runtime/
+/osm-cdmx.json
+/osm-cdmx.png
+/osm-cdmx-hilbert-rg16k.parquet
+/duckdb-tmp/

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSM GeoParquet por WFS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10.11.0/ol.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <aside class="panel">
+      <h1>OSM GeoParquet por WFS</h1>
+      <p>Consulta una ventana pequeña del planeta y dibuja el GeoJSON recibido.</p>
+      <form id="query-form">
+        <label for="layer-name">Capa</label>
+        <select id="layer-name">
+          <option value="osm:osm-tandil">OSM Tandil</option>
+          <option value="overture:overture-buildings-argentina">Overture Buildings Argentina</option>
+          <option value="osm:osm-mexico-df" selected>OSM Ciudad de México</option>
+        </select>
+        <fieldset>
+          <legend>BBOX en EPSG:4326</legend>
+          <label>Oeste <input id="minx" type="number" step="any" value="-99.137" required></label>
+          <label>Sur <input id="miny" type="number" step="any" value="19.429" required></label>
+          <label>Este <input id="maxx" type="number" step="any" value="-99.129" required></label>
+          <label>Norte <input id="maxy" type="number" step="any" value="19.437" required></label>
+        </fieldset>
+        <button id="use-view" type="button" class="secondary">Usar vista actual</button>
+        <label for="cql">Filtro CQL opcional</label>
+        <textarea id="cql" rows="4">mapGet(tags,'building') IS NOT NULL</textarea>
+        <label for="max-features">Máximo de objetos</label>
+        <input id="max-features" type="number" min="1" max="500" value="50" required>
+        <button type="submit">Consultar WFS</button>
+        <button id="clear" type="button" class="secondary">Limpiar resultados</button>
+      </form>
+      <output id="status" class="status" aria-live="polite">Listo.</output>
+      <details>
+        <summary>URL de la última consulta</summary>
+        <a id="request-url" target="_blank" rel="noreferrer"></a>
+      </details>
+    </aside>
+    <main id="map" aria-label="Mapa de resultados WFS"></main>
+    <script src="https://cdn.jsdelivr.net/npm/ol@10.11.0/dist/ol.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
