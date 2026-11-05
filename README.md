@@ -1,188 +1,192 @@
-# GeoServer Cloud, Portolan y OSM para State of the Map Latam 2026
+# GeoServer Cloud, Portolan, and OSM for State of the Map Latam 2026
 
-Este POC inicia GeoServer Cloud 3.0.2 y agrega `geoserver-portolan` 0.4.1.
-También publica tres GeoParquet remotos como capas consultables:
+[Leer en español](README.es.md)
 
-- El planeta OpenStreetMap de OpenPlanetData.
-- Los edificios de Overture en Argentina.
-- Una extracción optimizada de OpenStreetMap para Tandil.
-- Una extracción optimizada de OpenStreetMap para Ciudad de México.
+These implementation examples accompany the
+[State of the Map Latam 2026 presentation in Mexico](https://docs.google.com/presentation/d/1_skR7xCnRK1H0vKgzNxQLTRYxppRDbPM).
 
-El POC instala las dos piezas que necesita la demostración:
+This collection of implementation examples starts GeoServer Cloud 3.0.2 and adds
+`geoserver-portolan` 0.4.1. It also publishes four remote GeoParquet datasets as
+queryable layers:
 
-- `geoserver-portolan` integra catálogos Portolan con GeoServer Cloud.
-- El datastore Parquet consulta por HTTP el GeoParquet planetario de OpenPlanetData.
+- The OpenStreetMap planet dataset from OpenPlanetData.
+- Overture buildings in Argentina.
+- An optimized OpenStreetMap extract for Tandil.
+- An optimized OpenStreetMap extract for Mexico City.
 
-El POC no descarga el archivo planetario. El archivo remoto mide más de 200 GB.
-GeoServer lee por rangos HTTP solo los bloques que necesita.
+The examples install the two components required by the demonstration:
 
-## Requisitos
+- `geoserver-portolan` integrates Portolan catalogs with GeoServer Cloud.
+- The Parquet datastore queries the OpenPlanetData planet GeoParquet over HTTP.
 
-Instala estas herramientas:
+The implementation does not download the planet file. The remote file is more
+than 200 GB; GeoServer uses HTTP range requests to read only the required blocks.
 
-- Docker con el complemento Compose.
+## Requirements
+
+Install the following tools:
+
+- Docker with the Compose plugin.
 - `curl`.
 - GNU Make.
 - `sha256sum`.
 
-Reserva al menos 10 GB de memoria para Docker. El Compose inicia varios servicios.
+Allocate at least 10 GB of memory to Docker. The Compose setup starts several services.
 
-## Inicio rápido
+## Quick start
 
-Ejecuta:
+Run:
 
 ```bash
 make setup
 make verify
 ```
 
-`make setup` realiza estas tareas:
+`make setup` performs the following tasks:
 
-1. Descarga el Compose estable oficial de GeoServer Cloud.
-2. Comprueba que todas sus imágenes usan la versión 3.0.2.
-3. Descarga y verifica el ZIP `cloud` de `geoserver-portolan` 0.4.1.
-4. Inicia los servicios con Docker Compose.
-5. Crea el workspace `osm`.
-6. Crea el datastore Parquet `openplanetdata`.
-7. Publica la capa `osm:planet-latest.osm`.
-8. Crea `overture-buildings-argentina` y publica su capa de edificios.
-9. Crea `osm-tandil` y publica la capa optimizada de Tandil.
-10. Crea `osm-mexico-df` y publica la capa optimizada de Ciudad de México.
+1. Downloads the official stable GeoServer Cloud Compose file.
+2. Checks that all its images use version 3.0.2.
+3. Downloads and verifies the `cloud` ZIP for `geoserver-portolan` 0.4.1.
+4. Starts the services with Docker Compose.
+5. Creates the `osm` workspace.
+6. Creates the `openplanetdata` Parquet datastore.
+7. Publishes the `osm:planet-latest.osm` layer.
+8. Creates `overture-buildings-argentina` and publishes its buildings layer.
+9. Creates `osm-tandil` and publishes the optimized Tandil layer.
+10. Creates `osm-mexico-df` and publishes the optimized Mexico City layer.
 
-Abre <http://localhost:9090/geoserver/cloud/web/>.
-Usa `admin` como usuario y `geoserver` como contraseña.
+Open <http://localhost:9090/geoserver/cloud/web/>.
+Use `admin` as the username and `geoserver` as the password.
 
-El primer inicio tarda varios minutos. Docker debe descargar todas las imágenes.
+The first startup takes several minutes because Docker must download all images.
 
-## Demostración de OpenStreetMap
+## OpenStreetMap demonstration
 
-El datastore apunta a este archivo remoto:
+The datastore points to this remote file:
 
 ```text
 https://download.openplanetdata.com/osm/planet/geoparquet/v1/planet-latest.osm.parquet
 ```
 
-No existe una copia local del archivo. La fuente admite solicitudes HTTP por rangos.
+There is no local copy of the file. The source supports HTTP range requests.
 
-La capa declara este BBOX en EPSG:4326:
+The layer declares this BBOX in EPSG:4326:
 
 ```text
 -99.137,19.429,-99.129,19.437
 ```
 
-La ventana cubre unos 0,75 km² del Centro Histórico de Ciudad de México.
-La vista previa usa esa extensión y evita una consulta inicial al planeta completo.
+The window covers approximately 0.75 km² in Mexico City's Historic Center. The
+preview uses that extent and avoids an initial query against the entire planet.
 
-En lugar de la vista previa WMS, abre el cliente WFS:
+Instead of the WMS preview, open the WFS client:
 
 ```text
 http://localhost:9080/
 ```
 
-El cliente usa OpenLayers 10.11.0 y pide GeoJSON a WFS 1.0.0.
-El selector permite usar `osm-mexico-df`, `osm-tandil` u `overture-buildings-argentina`.
-El visor abre `osm-mexico-df` como capa inicial.
-La consulta combina el BBOX con un filtro CQL opcional.
-El navegador rechaza cualquier BBOX mayor a 1 km² antes de llamar a GeoServer.
-El límite inicial es de 50 objetos y el máximo permitido es de 500.
+The client uses OpenLayers 10.11.0 and requests GeoJSON from WFS 1.0.0. Its selector
+can use `osm-mexico-df`, `osm-tandil`, or `overture-buildings-argentina`. The viewer
+opens `osm-mexico-df` as the initial layer. The query combines the BBOX with an
+optional CQL filter. The browser rejects any BBOX larger than 1 km² before calling
+GeoServer. The initial limit is 50 features and the maximum allowed value is 500.
 
-Pulsa **Usar vista actual** para copiar la ventana visible a los campos del BBOX.
-Pulsa **Consultar WFS** para ejecutar la consulta y dibujar la respuesta.
-El visor muestra también la URL completa para facilitar la demostración.
+Click **Use current view** to copy the visible window into the BBOX fields. Click
+**Query WFS** to run the query and draw the response. The viewer also displays the
+full URL to make the demonstration easier.
 
-El mapa base usa teselas de OpenStreetMap.
-Nginx sirve el cliente y envía `/geoserver/` al gateway dentro de Docker.
-Así, el navegador no necesita permisos CORS adicionales.
+The base map uses OpenStreetMap tiles. Nginx serves the client and proxies
+`/geoserver/` to the gateway inside Docker, so the browser does not require
+additional CORS permissions.
 
-También puedes probar WFS y WMS desde la terminal:
+You can also test WFS and WMS from the terminal:
 
 ```bash
 make query
 make map
 ```
 
-El primer comando crea `osm-cdmx.json` con diez objetos.
-El segundo comando crea `osm-cdmx.png` con una imagen WMS.
+The first command creates `osm-cdmx.json` with ten features. The second creates
+`osm-cdmx.png` with a WMS image.
 
-El BBOX configura la extensión predeterminada de la capa. No es un límite de acceso.
-Una consulta WFS con otro filtro todavía puede pedir objetos fuera de esa ventana.
+The BBOX configures the layer's default extent; it is not an access restriction.
+A WFS query with a different filter can still request features outside that window.
 
-## GeoParquet optimizados de Argentina
+## Optimized GeoParquet datasets for Argentina
 
-El datastore `overture-buildings-argentina` apunta a `optimized-v2.0.parquet`.
-Publica `overture:overture-buildings-argentina` con la tabla nativa `optimized-v2.0`.
-El archivo contiene 26.765.980 polígonos de edificios de Overture.
-La vista inicial usa una ventana menor a 1 km² en Buenos Aires.
+The `overture-buildings-argentina` datastore points to `optimized-v2.0.parquet`.
+It publishes `overture:overture-buildings-argentina` using the native table
+`optimized-v2.0`. The file contains 26,765,980 Overture building polygons. The
+initial view uses a window smaller than 1 km² in Buenos Aires.
 
-El datastore `osm-tandil` apunta a `tandil-c-hilbert-rg16k.parquet`.
-Publica `osm:osm-tandil` con la tabla nativa `tandil-c-hilbert-rg16k`.
-El archivo contiene 41.609 objetos OSM y tres row groups.
-La vista inicial usa una ventana menor a 1 km² en el centro de Tandil.
+The `osm-tandil` datastore points to `tandil-c-hilbert-rg16k.parquet`. It publishes
+`osm:osm-tandil` using the native table `tandil-c-hilbert-rg16k`. The file contains
+41,609 OSM features and three row groups. The initial view uses a window smaller
+than 1 km² in central Tandil.
 
-El datastore `osm-mexico-df` apunta a `osm-cdmx-hilbert-rg16k.parquet`.
-Publica `osm:osm-mexico-df` con la tabla nativa `osm-cdmx-hilbert-rg16k`.
-El archivo contiene 625.701 objetos OSM distribuidos en 39 row groups.
-El visor usa esta capa en lugar del GeoParquet planetario.
-La vista inicial usa una ventana de 0,75 km² en Ciudad de México.
+The `osm-mexico-df` datastore points to `osm-cdmx-hilbert-rg16k.parquet`. It
+publishes `osm:osm-mexico-df` using the native table `osm-cdmx-hilbert-rg16k`.
+The file contains 625,701 OSM features distributed across 39 row groups. The viewer
+uses this layer instead of the planet GeoParquet. The initial view uses a 0.75 km²
+window in Mexico City.
 
-Ambos datastores leen los archivos remotos mediante solicitudes HTTP por rangos.
+Both datastores read the remote files through HTTP range requests.
 
+## Status of the Overture catalog in Portolan
 
-## Estado del catálogo Overture en Portolan
+Open **Utilities > Portolan** after signing in. The page should show
+`Parquet (Parquetry)` as available.
 
-Abre **Utilities > Portolan** después de iniciar sesión.
-La página debe mostrar `Parquet (Parquetry)` como disponible.
-
-El registro contiene `overture-portolan` y lo resuelve a este catálogo:
+The registry contains `overture-portolan` and resolves it to this catalog:
 
 ```text
 https://nlebovits.github.io/overture-portolan/catalog.json
 ```
 
-Ese catálogo no se puede aprovisionar el 2026-10-21.
-Sus activos apuntan al release Overture `2026-08-19.0`, que ya no está publicado.
-GeoServer crea datastores parciales, pero no puede descubrir tipos ni crear capas.
+That catalog cannot be provisioned as of 2026-10-21. Its assets point to Overture
+release `2026-08-19.0`, which is no longer published. GeoServer creates partial
+datastores but cannot discover feature types or create layers.
 
-Los logs muestran errores `no files found` para GeoParquet y HTTP 404 para PMTiles.
-Este POC no modifica ni espeja el catálogo para ocultar ese problema.
-No selecciones **Provision selected catalog** hasta que el publicador lo actualice.
+The logs show `no files found` errors for GeoParquet and HTTP 404 responses for
+PMTiles. This implementation does not modify or mirror the catalog to hide the
+problem. Do not select **Provision selected catalog** until its publisher updates it.
 
-Portolan es una especificación y un conjunto de herramientas para publicar datos
-geoespaciales a cualquier escala. El plugin interpreta el catálogo y delega la
-lectura de GeoParquet y PMTiles a los datastores instalados en GeoServer Cloud.
+Portolan is a specification and toolset for publishing geospatial data at any
+scale. The plugin interprets the catalog and delegates GeoParquet and PMTiles
+reading to the datastores installed in GeoServer Cloud.
 
-## Comandos
+## Commands
 
 ```text
-make download  descarga y verifica los archivos publicados
-make up        inicia el Compose
-make setup     inicia el Compose y publica la capa OSM
-make verify    prueba las versiones, el plugin y WFS
-make query     ejecuta una consulta WFS acotada
-make map       ejecuta una consulta WMS acotada
-make viewer    muestra la URL del cliente OpenLayers
-make ps        muestra el estado de los servicios
-make logs      sigue los logs principales
-make down      detiene los servicios y conserva los datos
-make reset     elimina los contenedores y los volúmenes del POC
-make test      valida los scripts y los valores fijados
+make download  downloads and verifies the published files
+make up        starts the Compose setup
+make setup     starts Compose and publishes the OSM layer
+make verify    checks the versions, plugin, and WFS
+make query     runs a bounded WFS query
+make map       runs a bounded WMS request
+make viewer    displays the OpenLayers client URL
+make ps        displays service status
+make logs      follows the main logs
+make down      stops the services and preserves the data
+make reset     removes the containers and volumes for these examples
+make test      validates the scripts and pinned values
 ```
 
-`make setup` es idempotente. Puedes ejecutarlo otra vez sin duplicar recursos.
+`make setup` is idempotent. You can run it again without duplicating resources.
 
-## Archivos descargados
+## Downloaded files
 
-El directorio ignorado `runtime/` contiene:
+The ignored `runtime/` directory contains:
 
 ```text
 runtime/compose.yml
 runtime/geoserver-portolan-0.4.1-cloud.zip
 ```
 
-El script verifica el SHA-256 del ZIP del plugin.
-También rechaza un Compose que no use GeoServer Cloud 3.0.2.
+The script verifies the plugin ZIP's SHA-256 checksum. It also rejects a Compose
+file that does not use GeoServer Cloud 3.0.2.
 
-Puedes usar un espejo con variables de entorno:
+You can use a mirror with environment variables:
 
 ```bash
 GSCLOUD_COMPOSE_URL=https://example.org/compose.yml \
@@ -190,33 +194,34 @@ PORTOLAN_CLOUD_URL=https://example.org/geoserver-portolan-0.4.1-cloud.zip \
 make download
 ```
 
-Conserva el mismo contenido o define `PORTOLAN_SHA256` con el checksum esperado.
+Keep the same content or set `PORTOLAN_SHA256` to the expected checksum.
 
-## Solución de problemas
+## Troubleshooting
 
-Revisa el estado y los logs:
+Check the status and logs:
 
 ```bash
 make ps
 make logs
 ```
 
-Si cambiaste versiones o quedó un catálogo de una prueba anterior, reinicia todo:
+If you changed versions or a catalog remains from an earlier test, restart everything:
 
 ```bash
 make reset
 make setup
 ```
 
-`make reset` elimina los volúmenes de este POC. No afecta otros proyectos Compose.
+`make reset` removes the volumes for these examples. It does not affect other
+Compose projects.
 
-Si la consulta remota tarda, confirma que tu red permite solicitudes por rangos
-a `download.openplanetdata.com`. El script usa un tiempo de espera de 30 segundos.
+If the remote query is slow, confirm that your network allows HTTP range requests
+to `download.openplanetdata.com`. The script uses a 30-second timeout.
 
-## Fuentes
+## Sources
 
 - [GeoServer Cloud 3.0.2](https://github.com/geoserver/geoserver-cloud/releases/tag/v3.0.2)
-- [Guía REST del datastore Parquet](https://geoserver.org/geoserver-cloud/user-guide/geoparquet-rest-api/)
-- [Release de geoserver-portolan 0.4.1](https://github.com/jemacchi/geoserver-portolan/releases/tag/v0.4.1)
-- [OpenStreetMap en OpenPlanetData](https://openplanetdata.com/datasets/openstreetmap/)
+- [Parquet datastore REST guide](https://geoserver.org/geoserver-cloud/user-guide/geoparquet-rest-api/)
+- [geoserver-portolan 0.4.1 release](https://github.com/jemacchi/geoserver-portolan/releases/tag/v0.4.1)
+- [OpenStreetMap on OpenPlanetData](https://openplanetdata.com/datasets/openstreetmap/)
 - [Portolan](https://www.portolan-sdi.org/)
